@@ -1,0 +1,89 @@
+body {
+  font-family: "Roboto", Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f8f9fa;
+  color: #333; /* Darker text color for better readability */
+  height: 100vh; /* Full viewport height */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header Section */
+.header-section {
+  text-align: center;
+  padding: 20px;
+  background-color: #007bff; /* Bootstrap's primary color */
+  color: #fff;
+  margin-bottom: 20px;
+}
+
+.header-title {
+  font-size: 2.5em;
+  font-weight: bold;
+  margin: 0;
+}
+
+#status {
+  margin-top: 10px;
+}
+
+/* Canvas Section */
+.canvas-section {
+  flex-grow: 1; /* Allow the section to take remaining vertical space */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Horizontally centers content */
+  justify-content: center; /* Vertically centers content */
+  height: 100vh; /* Full viewport height to centralize vertically */
+}
+
+/* Sliders and Controls */
+.slider-controls {
+  max-width: 640px;
+  margin: 0 auto 20px;
+  padding: 10px;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.form-label {
+  font-size: 1.1em;
+  font-weight: 500;
+  color: #007bff;
+}
+
+canvas {
+  border: 2px solid #007bff; /* Adds a border to the canvas */
+  width: 640px;
+  height: 480px;
+  display: block;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .canvas-section canvas {
+    width: 100%; /* Full width on mobile */
+    height: auto; /* Maintain aspect ratio */
+  }
+  .header-title {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 483px) {
+  .header-title {
+    font-size: 1.75rem;
+  }
+}
