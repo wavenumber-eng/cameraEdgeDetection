@@ -1,17 +1,9 @@
-const constraints = { video: { width: 640, height: 480 }, audio: false };
 const video = document.querySelector("#video");
-
-// Select  <canvas> element from  HTML
 const canvas = document.querySelector("#canvas-output");
+const toggleButton = document.querySelector("#toggleEdgeDetection");
 
-// 2D rendering context allows to draw on the canvas.
-// Now ctx will be a 2D context object,
-// and so we can use various methods to draw on the canvas.
-const ctx = canvas.getContext("2d", { willReadFrequently: true });
-
-// Set canvas size to 640x480
-canvas.width = 640;
-canvas.height = 480;
+// Flag edge detection
+let edgeDetectionEnabled = true;
 
 // Get slider elements
 const lowThresholdSlider = document.querySelector("#lowThresholdRange");
@@ -21,8 +13,19 @@ const highThresholdSlider = document.querySelector("#highThresholdRange");
 const lowThresholdValue = document.querySelector("#lowThresholdValue");
 const highThresholdValue = document.querySelector("#highThresholdValue");
 
+const constraints = { video: { width: 640, height: 480 }, audio: false };
+
+// Allows to draw on the canvas.
+const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+// Set canvas size to 640x480
+canvas.width = 640;
+canvas.height = 480;
+// -- End Varibles and Settings ---
+
 var Module = {
   onRuntimeInitialized() {
+    // Query html element
     const statusButton = document.querySelector("#status");
     statusButton.innerHTML =
       'OpenCV.js is ready! <i class="bi bi-check-circle"></i>';
@@ -32,7 +35,7 @@ var Module = {
 };
 
 navigator.mediaDevices
-  .getUserMedia({ video: true, audio: false })
+  .getUserMedia(constraints)
   .then((mediaStream) => {
     const video = document.querySelector("#video");
     video.srcObject = mediaStream;
@@ -47,41 +50,40 @@ navigator.mediaDevices
         // Draw the current video on canvas
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        // Create a Mat from the canvas
         const src = cv.imread(canvas);
-        const dst = new cv.Mat();
+        if (edgeDetectionEnabled) {
+          // Create a Mat from the canvas
 
-        const lowThreshold = parseInt(lowThresholdSlider.value);
-        const highThreshold = parseInt(highThresholdSlider.value);
+          const dst = new cv.Mat();
 
-        cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
-        // First apply Gaussian Blur
-        let blurredImage = new cv.Mat();
-        let ksize = new cv.Size(7, 7);
-        cv.GaussianBlur(src, blurredImage, ksize, 0, 0, cv.BORDER_DEFAULT);
-        cv.Canny(
-          blurredImage,
-          dst,
-          lowThreshold,
-          highThreshold,
-          (apertureSize = 3),
-          (L2gradient = false)
-        );
+          const lowThreshold = parseInt(lowThresholdSlider.value);
+          const highThreshold = parseInt(highThresholdSlider.value);
 
-        // Flip the image horizontally (mirror)
-        cv.flip(dst, dst, 1);
+          cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+          // First apply Gaussian Blur
+          let blurredImage = new cv.Mat();
+          let ksize = new cv.Size(7, 7);
+          cv.GaussianBlur(src, blurredImage, ksize, 0, 0, cv.BORDER_DEFAULT);
 
-        // Show the flipped image on the canvas
-        cv.imshow("canvas-output", dst);
+          cv.Canny(blurredImage, dst, lowThreshold, highThreshold);
+          // Flip the image horizontally (mirror)
+          cv.flip(dst, dst, 1);
 
-        // Clean up resources
+          // Show the flipped image on the canvas
+          cv.imshow("canvas-output", dst);
+
+          // Clean up resources
+          dst.delete();
+          blurredImage.delete();
+        } else {
+          cv.flip(src, src, 1);
+          cv.imshow("canvas-output", src);
+        }
+
         src.delete();
-        dst.delete();
-
         // Call the function recursively to process the next frame
         requestAnimationFrame(processFrame);
       };
-
       // Start processing the frames
       requestAnimationFrame(processFrame);
     });
@@ -107,4 +109,11 @@ highThresholdSlider.addEventListener("input", () => {
 
   highThresholdSlider.value = highVal < lowVal ? lowVal : highVal;
   highThresholdValue.textContent = highThresholdSlider.value;
+});
+
+toggleButton.addEventListener("click", () => {
+  edgeDetectionEnabled = !edgeDetectionEnabled;
+  toggleButton.textContent = edgeDetectionEnabled
+    ? "Disable Edge Detection"
+    : "Enable Edge Detection";
 });
