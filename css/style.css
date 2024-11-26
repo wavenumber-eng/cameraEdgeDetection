@@ -66,9 +66,23 @@ canvas {
   width: 640px;
   height: 480px;
   display: block;
+  margin: 0 auto;
   background-color: #fff;
   border-radius: 10px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.canvas-section {
+  padding: 0; /* Ensure no extra padding */
+  margin: 0; /* Ensure no extra margin */
+}
+
+.webcam-section {
+  margin: 0;
+  padding: 0;
+  display: none;
+  height: 0;
+  overflow: hidden;
 }
 
 /* Responsive Styles */
