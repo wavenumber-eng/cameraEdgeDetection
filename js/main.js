@@ -16,12 +16,28 @@ const highThresholdValue = document.querySelector("#highThresholdValue");
 const constraints = { video: { width: 640, height: 480 }, audio: false };
 
 // Allows to draw on the canvas.
+
 const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
-// Set canvas size to 640x480
-canvas.width = 640;
-canvas.height = 480;
-// -- End Varibles and Settings ---
+// Function to resize the canvas
+function resizeCanvas() {
+  const aspectRatio = 640 / 480; // Original aspect ratio
+  const width = Math.min(window.innerWidth, 640); // Max width: 640px
+  const height = width / aspectRatio;
+
+  canvas.width = width;
+  canvas.height = height;
+
+  // Optional: Adjust the video constraints if necessary
+  video.style.width = `${width}px`;
+  video.style.height = `${height}px`;
+}
+
+// Set initial canvas size
+resizeCanvas();
+
+// Listen for window resize events
+window.addEventListener("resize", resizeCanvas);
 
 var Module = {
   onRuntimeInitialized() {
