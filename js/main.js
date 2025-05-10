@@ -50,63 +50,119 @@ var Module = {
   },
 };
 
-navigator.mediaDevices
-  .getUserMedia(constraints)
-  .then((mediaStream) => {
-    const video = document.querySelector("#video");
-    video.srcObject = mediaStream;
-    video.play();
 
-    video.addEventListener("play", () => {
-      const processFrame = () => {
-        if (video.paused || video.ended) {
-          return;
-        }
-
-        // Draw the current video on canvas
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        const src = cv.imread(canvas);
-        if (edgeDetectionEnabled) {
-          // Create a Mat from the canvas
-
-          const dst = new cv.Mat();
-
-          const lowThreshold = parseInt(lowThresholdSlider.value);
-          const highThreshold = parseInt(highThresholdSlider.value);
-
-          cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
-          // First apply Gaussian Blur
-          let blurredImage = new cv.Mat();
-          let ksize = new cv.Size(7, 7);
-          cv.GaussianBlur(src, blurredImage, ksize, 0, 0, cv.BORDER_DEFAULT);
-
-          cv.Canny(blurredImage, dst, lowThreshold, highThreshold);
-          // Flip the image horizontally (mirror)
-          cv.flip(dst, dst, 1);
-
-          // Show the flipped image on the canvas
-          cv.imshow("canvas-output", dst);
-
-          // Clean up resources
-          dst.delete();
-          blurredImage.delete();
-        } else {
-          cv.flip(src, src, 1);
-          cv.imshow("canvas-output", src);
-        }
-
-        src.delete();
-        // Call the function recursively to process the next frame
-        requestAnimationFrame(processFrame);
-      };
-      // Start processing the frames
-      requestAnimationFrame(processFrame);
-    });
-  })
-  .catch((error) => {
-    console.error("Error accessing media devices.", error);
+// Function to populate camera selection dropdown
+async function setupCameraSelection() {
+  const cameraSelect = document.querySelector("#cameraSelect");
+  
+  // Get list of video devices
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  const videoDevices = devices.filter(device => device.kind === 'videoinput');
+  
+  // Add cameras to dropdown
+  videoDevices.forEach((device, index) => {
+    const option = document.createElement('option');
+    option.value = device.deviceId;
+    option.text = device.label || `Camera ${index + 1}`;
+    cameraSelect.appendChild(option);
   });
+  
+  // Event listener for camera selection change
+  cameraSelect.addEventListener('change', switchCamera);
+  
+  // Start with the first camera if available
+  if (videoDevices.length > 0) {
+    startStream(videoDevices[0].deviceId);
+  }
+}
+
+// Function to switch camera
+function switchCamera() {
+  const cameraSelect = document.querySelector("#cameraSelect");
+  const selectedDeviceId = cameraSelect.value;
+  
+  // Stop current stream if exists
+  if (video.srcObject) {
+    video.srcObject.getTracks().forEach(track => track.stop());
+  }
+  
+  // Start new stream with selected camera
+  startStream(selectedDeviceId);
+}
+
+// Modified function to start stream with specific device ID
+function startStream(deviceId) {
+  const constraints = {
+    video: {
+      deviceId: deviceId ? {exact: deviceId} : undefined,
+      width: 640,
+      height: 480
+    },
+    audio: false
+  };
+  
+  navigator.mediaDevices.getUserMedia(constraints)
+    .then((mediaStream) => {
+      video.srcObject = mediaStream;
+      video.play();
+      // Your existing video play event listener logic continues here
+      video.addEventListener("play", () => {
+        const processFrame = () => {
+          if (video.paused || video.ended) {
+            return;
+          }
+  
+          // Draw the current video on canvas
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  
+          const src = cv.imread(canvas);
+          if (edgeDetectionEnabled) {
+            // Create a Mat from the canvas
+  
+            const dst = new cv.Mat();
+  
+            const lowThreshold = parseInt(lowThresholdSlider.value);
+            const highThreshold = parseInt(highThresholdSlider.value);
+  
+            cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+            // First apply Gaussian Blur
+            let blurredImage = new cv.Mat();
+            let ksize = new cv.Size(7, 7);
+            cv.GaussianBlur(src, blurredImage, ksize, 0, 0, cv.BORDER_DEFAULT);
+  
+            cv.Canny(blurredImage, dst, lowThreshold, highThreshold);
+            // Flip the image horizontally (mirror)
+            cv.flip(dst, dst, 1);
+  
+            // Show the flipped image on the canvas
+            cv.imshow("canvas-output", dst);
+  
+            // Clean up resources
+            dst.delete();
+            blurredImage.delete();
+          } else {
+            cv.flip(src, src, 1);
+            cv.imshow("canvas-output", src);
+          }
+  
+          src.delete();
+          // Call the function recursively to process the next frame
+          requestAnimationFrame(processFrame);
+        };
+        // Start processing the frames
+        requestAnimationFrame(processFrame);
+      });
+    
+    
+    })
+    .catch((error) => {
+      console.error("Error accessing media devices.", error);
+    });
+}
+
+// Call this function when the page loads
+document.addEventListener('DOMContentLoaded', setupCameraSelection);
+
 
 // Update lowThreshold
 lowThresholdSlider.addEventListener("input", () => {
